@@ -1,13 +1,9 @@
 {
     "manifest_version": 3,
-    "name": "Classroom AI Assistant",
+    "name": "Classroom AI",
     "version": "0.1.0",
-    "description": "Chat with your Google Classroom materials",
+    "description": "Test",
     "permissions": ["storage", "identity"],
-    "host_permissions": [
-      "https://classroom.google.com/*",
-      "https://www.googleapis.com/*"
-    ],
     "background": {
       "service_worker": "background/background.js",
       "type": "module"

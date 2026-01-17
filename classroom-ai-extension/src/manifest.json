@@ -10,13 +10,6 @@
     },
     "action": {
       "default_title": "Classroom AI"
-    },
-    "content_scripts": [
-      {
-        "matches": ["https://classroom.google.com/*"],
-        "js": ["content/classroomDetector.js"],
-        "run_at": "document_idle"
-      }
-    ]
+    }
   }
   

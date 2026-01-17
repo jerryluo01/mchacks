@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Classroom AI</title>
+    <link rel="stylesheet" href="./sidepanel.css" />
+  </head>
+
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="title">
+          <div class="logo">CA</div>
+          <div class="titleText">
+            <div class="name">Classroom AI</div>
+            <div class="subtitle" id="courseSubtitle">Not connected to a course yet</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <select id="modeSelect" class="select" title="Mode">
+            <option value="explain" selected>Explain</option>
+            <option value="quiz">Quiz me</option>
+          </select>
+          <button id="refreshBtn" class="btn secondary" title="Refresh course cache">Refresh</button>
+        </div>
+      </header>
+
+      <main class="chat" id="chat"></main>
+
+      <footer class="composer">
+        <textarea
+          id="input"
+          class="input"
+          rows="2"
+          placeholder="Ask a question… (Enter to send, Shift+Enter for newline)"
+        ></textarea>
+
+        <div class="composerRow">
+          <button id="sendBtn" class="btn primary">Send</button>
+          <div class="status" id="status"></div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="./sidepanel.js"></script>
+  </body>
+</html>

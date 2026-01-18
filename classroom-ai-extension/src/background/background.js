@@ -48,7 +48,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const question = msg.message; // sidepanel uses "message", not "question"
         const context = await getCourseContext(msg.courseId || currentCourse?.courseId);
         
+        console.log("Chat request:", { question, context, mode: msg.mode });
         const answer = await queryLLM(question, context);
+        console.log("LLM response:", answer);
         
         // Return format expected by sidepanel: { answer, course?, sources?, error? }
         sendResponse({
@@ -103,7 +105,14 @@ async function fetchClassroomData(token) {
 }
 
 async function queryLLM(question, context) {
-  const apiKey = import.meta.env.GEM_KEY;
+  // Try VITE_ prefixed env var first, then fallback to GEM_KEY
+  const apiKey = import.meta.env.VITE_GEM_KEY || import.meta.env.GEM_KEY;
+  
+  if (!apiKey) {
+    console.error("Gemini API key not found. Set VITE_GEM_KEY in environment or .env file");
+    return "Error: API key not configured. Please set VITE_GEM_KEY environment variable.";
+  }
+  
   const URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
   
   try {
@@ -125,11 +134,31 @@ async function queryLLM(question, context) {
         ]
       })
     });
+    
+    // Check if response is OK
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Gemini API error:", response.status, response.statusText, errorData);
+      return `Error: Gemini API returned ${response.status} ${response.statusText}. ${errorData.error?.message || ''}`;
+    }
         
     const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini";
+    
+    // Better error checking for response structure
+    if (!data.candidates || !data.candidates[0]) {
+      console.error("Unexpected Gemini response structure:", data);
+      return `Error: Unexpected response format. Check console for details.`;
+    }
+    
+    const text = data.candidates[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      console.error("No text in Gemini response:", data);
+      return "No response from Gemini - response was empty.";
+    }
+    
+    return text;
   } catch(err) {
     console.error("LLM query failed:", err);
-    return "Error: could not fetch answer";
+    return `Error: could not fetch answer - ${err.message}`;
   }
 }

@@ -44,6 +44,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             currentCourse = {
               courseId,
               name: msg.data.classInfo?.name || null,
+              data: msg.data
             };
             // Notify sidepanel if it's open
             chrome.runtime.sendMessage({
@@ -62,7 +63,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         // sidepanel sends: { type: "CHAT", mode, courseId, message }
         // Need to get context based on courseId, then call LLM
         const question = msg.message; // sidepanel uses "message", not "question"
-        const context = await getCourseContext(msg.courseId || currentCourse?.courseId);
+        const context = await getCourseContext(msg.data || currentCourse?.data);
         const mode = msg.mode || "explain"; // "explain" | "quiz"
         
         console.log("Chat request:", { question, context, mode });
@@ -98,12 +99,35 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 // Helper function to get course context (placeholder - implement with your data source)
-async function getCourseContext(courseId) {
-  if (!courseId) return "No course context available.";
-  // TODO: Retrieve course materials, assignments, etc. from storage/API
-  // For now, return placeholder
-  return `Course ID: ${courseId}`;
+async function getCourseContext(courseInfo) {
+  if (!courseInfo) return "No course context available.";
+
+  const { classInfo, assignments, materials } = courseInfo;
+
+  let context = "";
+
+  if (classInfo?.name) {
+    context += `Class: ${classInfo.name}\n\n`;
+  }
+
+  if (assignments?.length) {
+    context += "Assignments:\n";
+    assignments.slice(0, 10).forEach(a => {
+      context += `- ${a.title}${a.date ? " (Due: " + a.date + ")" : ""}\n`;
+    });
+    context += "\n";
+  }
+
+  if (materials?.length) {
+    context += "Materials:\n";
+    materials.slice(0, 10).forEach(m => {
+      context += `- ${m.title}\n`;
+    });
+  }
+
+  return context.trim();
 }
+
 
 // Example placeholder functions
 async function fetchClassroomData(token) {

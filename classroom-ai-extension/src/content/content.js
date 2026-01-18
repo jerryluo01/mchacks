@@ -37,34 +37,38 @@ function extractClassroomData() {
   }
 
   // Extract assignments from the stream
-  const assignmentElements = document.querySelectorAll('[data-item-id], [role="listitem"]');
-  assignmentElements.forEach((element, index) => {
-    const titleElement = element.querySelector('h3, [data-title], .YVvGBb');
-    const dateElement = element.querySelector('[data-date], .OVDEZ');
-    const descriptionElement = element.querySelector('[data-description], .dL5kDf');
+  // Get assignments more safely
+  const assignmentElements = document.querySelectorAll('[data-item-id]');
+  assignmentElements.forEach((el, index) => {
+    const title = el.querySelector('[data-title]')?.textContent?.trim();
+    if (!title) return; // skip empty
+    const date = el.querySelector('[data-date]')?.textContent?.trim();
+    const description = el.querySelector('[data-description]')?.textContent?.trim();
     
-    if (titleElement) {
-      const assignment = {
-        id: element.getAttribute('data-item-id') || `item-${index}`,
-        title: titleElement.textContent?.trim(),
-        date: dateElement?.textContent?.trim(),
-        description: descriptionElement?.textContent?.trim(),
-        element: element.textContent?.trim()
-      };
-      data.assignments.push(assignment);
-    }
+    data.assignments.push({
+      id: el.getAttribute('data-item-id') || `item-${index}`,
+      title,
+      date,
+      description,
+      element: el.textContent?.trim()
+    });
   });
+
 
   // Extract materials/attachments
   const materialLinks = document.querySelectorAll('a[href*="drive.google.com"], a[href*="docs.google.com"]');
   materialLinks.forEach((link, index) => {
+    const title = link.textContent?.trim() || link.getAttribute('aria-label') || `material-${index}`;
+    if (!title) return;
+    
     data.materials.push({
       id: `material-${index}`,
-      title: link.textContent?.trim() || link.getAttribute('aria-label'),
+      title,
       url: link.href,
       type: link.href.includes('docs.google.com') ? 'document' : 'drive'
     });
   });
+
 
   return data;
 }

@@ -1,5 +1,21 @@
 console.log("Background service worker loaded!");
 
+// Debug: Check API key availability at load time
+// Note: import.meta.env is replaced at BUILD TIME, not runtime
+// So this will show "undefined" if VITE_GEM_KEY wasn't set during build
+const apiKeyCheck = import.meta.env.VITE_GEM_KEY;
+console.log("API Key availability:", {
+  isDefined: !!apiKeyCheck,
+  length: apiKeyCheck?.length || 0,
+  preview: apiKeyCheck ? `${apiKeyCheck.substring(0, 8)}...` : "undefined - Key not set during build"
+});
+// Debug: Check if API key is available (will be replaced at build time)
+console.log("API Key check:", {
+  hasViteKey: !!import.meta.env.VITE_GEM_KEY,
+  keyLength: import.meta.env.VITE_GEM_KEY ? import.meta.env.VITE_GEM_KEY.length : 0,
+  keyPreview: import.meta.env.VITE_GEM_KEY ? `${import.meta.env.VITE_GEM_KEY.substring(0, 10)}...` : "undefined"
+});
+
 // Store current course state
 let currentCourse = null; // { courseId, name }
 
@@ -47,9 +63,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         // Need to get context based on courseId, then call LLM
         const question = msg.message; // sidepanel uses "message", not "question"
         const context = await getCourseContext(msg.courseId || currentCourse?.courseId);
+        const mode = msg.mode || "explain"; // "explain" | "quiz"
         
-        console.log("Chat request:", { question, context, mode: msg.mode });
-        const answer = await queryLLM(question, context);
+        console.log("Chat request:", { question, context, mode });
+        const answer = await queryLLM(question, context, mode);
         console.log("LLM response:", answer);
         
         // Return format expected by sidepanel: { answer, course?, sources?, error? }
@@ -104,13 +121,36 @@ async function fetchClassroomData(token) {
   }));
 }
 
-async function queryLLM(question, context) {
+async function queryLLM(question, context, mode = "explain") {
   // Try VITE_ prefixed env var first, then fallback to GEM_KEY
-  const apiKey = import.meta.env.VITE_GEM_KEY || import.meta.env.GEM_KEY;
+  const apiKey = import.meta.env.VITE_GEM_KEY;
   
   if (!apiKey) {
     console.error("Gemini API key not found. Set VITE_GEM_KEY in environment or .env file");
     return "Error: API key not configured. Please set VITE_GEM_KEY environment variable.";
+  }
+  
+  // Build prompt based on mode
+  let prompt;
+  if (mode === "quiz") {
+    // Quiz mode: generate practice questions
+    prompt = `Based on the following course context, generate 3-5 practice questions with brief answers that would help test understanding of the material.
+
+Context:\n${context}\n\nTopic/Question:\n${question}
+
+Generate questions in the following format:
+1. [Question]
+   Answer: [Brief answer]
+
+2. [Question]
+   Answer: [Brief answer]
+
+...`;
+  } else {
+    // Explain mode: provide explanation/answer
+    prompt = `Context:\n${context}\n\nQuestion:\n${question}
+
+Please provide a clear and helpful explanation or answer.`;
   }
   
   const URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
@@ -127,7 +167,7 @@ async function queryLLM(question, context) {
           {
             parts: [
               {
-                text: `Context:\n${context}\n\nQuestion:\n${question}`
+                text: prompt
               }
             ]
           }

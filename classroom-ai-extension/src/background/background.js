@@ -3,6 +3,11 @@ console.log("Background service worker loaded!");
 // Store current course state
 let currentCourse = null; // { courseId, name }
 
+// Open sidepanel when extension icon is clicked
+chrome.action.onClicked.addListener((tab) => {
+  chrome.sidePanel.open({ windowId: tab.windowId });
+});
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Keep the message channel open for async response
   // MUST return true BEFORE any async operations

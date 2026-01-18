@@ -4,7 +4,7 @@
   "name": "Classroom AI",
   "version": "0.1.0",
   "description": "Test",
-  "permissions": ["storage", "identity"],
+  "permissions": ["storage", "identity", "sidePanel"],
   "host_permissions": ["https://classroom.google.com/*"],
   "background": {
     "service_worker": "background.js",
@@ -19,6 +19,9 @@
   ],
   "action": {
     "default_title": "Classroom AI"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
   }, 
   "oauth2": {
     "client_id": "36832839977-aukg0ap121aapso8jkksbe4iaf87jpk8.apps.googleusercontent.com",

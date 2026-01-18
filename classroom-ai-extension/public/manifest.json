@@ -1,0 +1,29 @@
+
+{
+  "manifest_version": 3,
+  "name": "Classroom AI",
+  "version": "0.1.0",
+  "description": "Test",
+  "permissions": ["storage", "identity"],
+  "host_permissions": ["https://classroom.google.com/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://classroom.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Classroom AI"
+  }, 
+  "oauth2": {
+    "client_id": "36832839977-aukg0ap121aapso8jkksbe4iaf87jpk8.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/classroom.courses.readonly"
+    ]
+  }
+}

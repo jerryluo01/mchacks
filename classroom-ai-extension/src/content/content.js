@@ -170,10 +170,5 @@ function init() {
 init();
 
 // Export functions for potential use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    isClassroomPage,
-    extractClassroomData,
-    sendToBackground
-  };
-}
+
+console.log("content script loaded");
